@@ -14,3 +14,7 @@ Both of these two functions are just copies of those included in VFI Toolkit
 
 To solve the life-cycle model you will also need a copy of VFI Toolkit: vfitoolkit.com
 (The version of VFI Toolkit at end of Sept 2022 is the one that was used for the paper.) 
+
+
+The _ReturnFn is used by LifeCycleModel_tDigest.m.
+tDigest_extra.m is just a few things that were used while developing createDigest() and mergeDigest(). It is just there for completeness.
