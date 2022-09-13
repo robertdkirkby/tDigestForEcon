@@ -10,6 +10,7 @@ Two examples:
 The implementation of the t-Digests is done by the two functions:
  - createDigest(): creates t-Digest from a distribution (of values and weights)
  - mergeDigest(): create t-Digest by merging together a few t-Digests
+
 Both of these two functions are just copies of those included in VFI Toolkit
 
 To solve the life-cycle model you will also need a copy of VFI Toolkit: vfitoolkit.com
@@ -17,4 +18,4 @@ To solve the life-cycle model you will also need a copy of VFI Toolkit: vfitoolk
 
 
 The _ReturnFn is used by LifeCycleModel_tDigest.m.
-tDigest_extra.m is just a few things that were used while developing createDigest() and mergeDigest(). It is just there for completeness.
+tDigest_extra.m is just a few things that were used while developing createDigest() and mergeDigest(). It is just there for completeness (mostly about how I decided to set defaults, preallocating memory).
