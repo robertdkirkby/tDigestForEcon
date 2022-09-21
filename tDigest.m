@@ -34,6 +34,7 @@ max(abs(qgrid-qgridagain)) % Check: This will be zero if I define the inverse fu
 % Note to self: following looks correct
 figure(1)
 plot(qgrid,kgrid)
+ylabel('k')
 xlabel('q')
 title('Notice how more points are nearer the extreme of q')
 % If you use other scaling functions k2 or k3 there will be even more points will be near extremes.
@@ -225,5 +226,53 @@ fprintf('For merge of three distribitons \n')
 fprintf('Precise calculation gives median=%8.4f and 99th percentile=%8.4f \n',medianvalue,percentile99)
 fprintf('Digest calculation gives median=%8.4f and 99th percentile=%8.4f \n',results)
 
+
+
+
+
+%% Just try out a very different kind of distribution: 0.3 with value 4, 0.2 with value 5, 0.5 with value 7
+evalgrid4=[4*ones(3*10^5,1);5*ones(2*10^5,1);7*ones(5*10^5,1)];
+% Distribution is a collection of grid points and their associated weights
+weights4=ones(length(evalgrid4),1)/length(evalgrid4);
+weights4=weights4/sum(weights4); % Normalize mass to one
+
+mean4=sum(evalgrid4.*weights4); % Is correct: 0.3*4+0.2*5+0.5*7=5.7
+
+[sortevalgrid4,sortIndex]=sort(evalgrid4); % Note the sort steps are redundant, but I will do them anyway
+sortweights4=weights4(sortIndex);
+
+mean4=sum(sortevalgrid4.*sortweights4);
+% mean1 and mean2 return same, so sort is implemented correctly
+
+% Calculate the 29.9 percentile directly from the distribution
+temp=cumsum(sortweights4);
+[~,p299index]=min(abs(temp-0.299));
+temp(p299index); % This should be roughly 0.299
+p299=sortevalgrid4(p299index);
+% Calculate the 30.1 percentile directly from the distribution
+temp=cumsum(sortweights4);
+[~,p301index]=min(abs(temp-0.301));
+temp(p301index); % This should be roughly 0.301
+p301=sortevalgrid4(p301index);
+% Calculate the 49.9 percentile directly from the distribution
+temp=cumsum(sortweights4);
+[~,p499index]=min(abs(temp-0.499));
+temp(p499index); % This should be roughly 0.499
+p499=sortevalgrid4(p499index);
+% Calculate the 50.1 percentile directly from the distribution
+temp=cumsum(sortweights4);
+[~,p501index]=min(abs(temp-0.501));
+temp(p501index); % This should be roughly 0.501
+p501=sortevalgrid4(p501index);
+
+% Now use the digest
+[C4,digestweights4,qlimitvec4]=createDigest(evalgrid4, weights4,delta);
+
+results4=interp1(qlimitvec4,C4,[0.299,0.301,0.499,0.501]);
+
+
+fprintf('For fourth distribution \n')
+fprintf('Precise calculation gives percentiles: 29.9th=%8.4f, 30.1th=%8.4f, 49.9th=%8.4f, 50.1th=%8.4f \n',p299,p301,p499,p501)
+fprintf('Digest calculation gives percentiles: 29.9th=%8.4f, 30.1th=%8.4f, 49.9th=%8.4f, 50.1th=%8.4f \n',results4)
 
 
