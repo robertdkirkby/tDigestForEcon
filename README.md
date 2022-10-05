@@ -5,7 +5,7 @@ These are the matlab codes to accompany paper: Robert Kirkby - Computing Quantil
 
 Two examples:
  - tDigest.m: calculates the quantiles both exactly and using t-Digests for a few different randomly generated samples/distributions.
- - LifeCycleModel_tDigest.m: solves a life-cycle model and calculates the quatiles of functions of agent distribtuion both exactly and using t-Digest
+ - LifeCycleModel_tDigest.m: solves a life-cycle model and calculates the quatiles of functions of agent distribution both exactly and using t-Digest
 
 The implementation of the t-Digests is done by the two functions:
  - createDigest(): creates t-Digest from a distribution (of values and weights)
