@@ -79,10 +79,10 @@ medianvalue_1=sortevalgrid1(medianindex);
 temp(index); % This should be roughly 0.99
 percentile99_1=sortevalgrid1(index);
 
-%% Create second distribution: 10^5 observations of a Uniform[0,5] variable
+%% Create second distribution: 10^7 observations of a Uniform[0,5] variable
 
 % Distribution is a collection of grid points and their associated weights
-evalgrid2=5*rand(10^5,1);
+evalgrid2=5*rand(10^7,1);
 weights2=rand(length(evalgrid2),1);
 weights2=weights2/sum(weights2); % Normalize mass to one
 

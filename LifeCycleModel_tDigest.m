@@ -212,21 +212,41 @@ FnsToEvaluate.earnings=@(h,aprime,a,z,e,w,kappa_j,alpha_i) w*h*kappa_j*alpha_i*z
 FnsToEvaluate.assets=@(h,aprime,a,z,e) a; % a is the current asset holdings
 FnsToEvaluate.alpha_i=@(h,aprime,a,z,e,alpha_i) alpha_i; % alpha_i is the fixed effect
 FnsToEvaluate.agej=@(h,aprime,a,z,e,agej) agej; % alpha_i is the fixed effect
+FnsToEvaluate.savingsrate=@(h,aprime,a,z,e,r,w,kappa_j,alpha_i) (aprime-a)/(r*a+w*h*kappa_j*alpha_i*z*e); % savings as a fraction of income
 
 % notice that we have called these fractiontimeworked, earnings and assets
 % Have added alpha_i so that we can see how this evaluates differently across the different permanent types of agents
 % Note that alpha_i also appears in the function for earnings
 
 %% Calculate the life-cycle profiles
+% These are not actually used anywhere in the t-Digest paper
 AgeConditionalStats=LifeCycleProfiles_FHorz_Case1_PType(StationaryDist, Policy, FnsToEvaluate, Params,n_d,n_a,n_z,N_j,N_i,d_grid, a_grid, z_grid, simoptions);
 
+rr=1;
+% NOTE: To do the run time calculations mentioned in the paper just uncomment the following for loop over rr (and uncomment the 'end' around line 324)
+% Repeat=100;
+% for rr=1:Repeat
+%     rr
+
 %% Calculate some statistics of the agent distribution
+tic;
 AllStats=EvalFnOnAgentDist_AllStats_FHorz_Case1_PType(StationaryDist, Policy, FnsToEvaluate, Params,n_d,n_a,n_z,N_j,N_i,d_grid, a_grid, z_grid, simoptions);
+timetdigest(rr)=toc
 % Note: This command used t-Digests for the grouped statistics
 
 %% Now calculate the statistics exactly (without using t-Digests, which is what VFI Toolkit does)
+tic;
+simoptions.parallel=1;
+% This next example is only for comparing times of running on cpu to running on gpu. It is not actually used for anything.
+ValuesOnGrid=EvalFnOnAgentDist_ValuesOnGrid_FHorz_Case1_PType(StationaryDist, Policy, FnsToEvaluate, Params,n_d,n_a,n_z,N_j,N_i,d_grid, a_grid, z_grid, simoptions);
+timeexactcpu(rr)=toc
+
+tic;
+simoptions.parallel=2;
 % First, evaluate the functions on the grid
 ValuesOnGrid=EvalFnOnAgentDist_ValuesOnGrid_FHorz_Case1_PType(StationaryDist, Policy, FnsToEvaluate, Params,n_d,n_a,n_z,N_j,N_i,d_grid, a_grid, z_grid, simoptions);
+timeexactgpu(rr)=toc
+
 
 % Now calculate the median and 99th percentile directly from these
 FullHoursValues=zeros(n_a,n_z,n_e,N_j,N_i);
@@ -252,8 +272,16 @@ FullAssetsValues(:,:,:,:,3)=ValuesOnGrid.assets.ptype003;
 FullAssetsValues(:,:,:,:,4)=ValuesOnGrid.assets.ptype004;
 FullAssetsValues(:,:,:,:,5)=ValuesOnGrid.assets.ptype005;
 FullAssetsValues=reshape(FullAssetsValues,[numel(FullAssetsValues),1]);
+% Now calculate the median and 99th percentile directly from these
+FullSavingsRateValues=zeros(n_a,n_z,n_e,N_j,N_i);
+FullSavingsRateValues(:,:,:,:,1)=ValuesOnGrid.savingsrate.ptype001;
+FullSavingsRateValues(:,:,:,:,2)=ValuesOnGrid.savingsrate.ptype002;
+FullSavingsRateValues(:,:,:,:,3)=ValuesOnGrid.savingsrate.ptype003;
+FullSavingsRateValues(:,:,:,:,4)=ValuesOnGrid.savingsrate.ptype004;
+FullSavingsRateValues(:,:,:,:,5)=ValuesOnGrid.savingsrate.ptype005;
+FullSavingsRateValues=reshape(FullSavingsRateValues,[numel(FullSavingsRateValues),1]);
 
-% 
+%
 FullAgentDist=zeros(n_a,n_z,n_e,N_j,N_i);
 FullAgentDist(:,:,:,:,1)=StationaryDist.ptype001*StationaryDist.ptweights(1);
 FullAgentDist(:,:,:,:,2)=StationaryDist.ptype002*StationaryDist.ptweights(2);
@@ -283,6 +311,17 @@ Assets_median=SortedValues(median_index);
 p99_index=find(cumsum(SortedStationaryDistVec)>=0.99,1,'first');
 Assets_99=SortedValues(p99_index);
 
+[SortedValues,SortedValues_index] = sort(FullSavingsRateValues);
+SortedStationaryDistVec=FullAgentDist(SortedValues_index);
+median_index=find(cumsum(SortedStationaryDistVec)>=0.5,1,'first');
+SavingsRate_median=SortedValues(median_index);
+p99_index=find(cumsum(SortedStationaryDistVec)>=0.99,1,'first');
+SavingsRate_99=SortedValues(p99_index);
+
+
+timeexactextra(rr)=toc
+
+% end
 
 fprintf('Median of fraction of time worked is %8.4f with exact, %8.4f with tDigest \n',FractionTimeWorked_median,AllStats.fractiontimeworked.Median)
 fprintf('99th percentile of fraction of time worked is %8.4f with exact, %8.4f with tDigest \n',FractionTimeWorked_99,AllStats.fractiontimeworked.Percentile99th)
@@ -292,6 +331,9 @@ fprintf('99th percentile of earnings is %8.4f with exact, %8.4f with tDigest \n'
 
 fprintf('Median of assets holdings is %8.4f with exact, %8.4f with tDigest \n',Assets_median,AllStats.assets.Median)
 fprintf('99th percentile of assets holdings is %8.4f with exact, %8.4f with tDigest \n',Assets_99,AllStats.assets.Percentile99th)
+
+fprintf('Median of savings rate is %8.4f with exact, %8.4f with tDigest \n',SavingsRate_median,AllStats.savingsrate.Median)
+fprintf('99th percentile of savings rate is %8.4f with exact, %8.4f with tDigest \n',SavingsRate_99,AllStats.savingsrate.Percentile99th)
 
 %% A couple of further checks of results, these do not involve t-Digests but are just about ensuring everything is working as expected
 % We can also check the conditional on ptype stats (note that these do not involve t-Digest)
